@@ -8,7 +8,7 @@ iTimer2 is a versatile and easy-to-use timer app designed to sit right in your M
 * Pomodoro Mode: Optimize your productivity with the built-in Pomodoro timer. Focus on work sessions followed by short breaks to enhance your concentration.
 * Customizable Timer Names: Personalize your timers by giving them custom names, making it easy to identify the task or activity you’re timing.
 * Remaining Time in Menu Bar: Keep an eye on your timer without interrupting your workflow. The remaining time is conveniently displayed right in your menu bar.
-* Professional Preferences Page: Fine-tune your experience with iTimer2 using the well-designed Preferences page. Customize work and break durations, learn keyboard shorcuts, launch on start, and more.
+* Professional Preferences Page: Fine-tune your experience with iTimer2 using the well-designed Preferences page. Customize work and break durations, learn and change keyboard shorcuts, launch on start, and more.
 * History & Timestamps: Track your productivity with a detailed history of past timers, including timestamps for when each timer was started. Monitor your workflow over time and gain insights into your time management.
 
 ## How to Use
