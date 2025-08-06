@@ -21,5 +21,5 @@ extension KeyboardShortcuts.Name {
     static let preferences = Self("preferences", default: .init(.comma, modifiers: .command))
     static let quit = Self("quit", default: .init(.q, modifiers: .command))
     static let openApp = Self("openApp", default: .init(.t, modifiers: [.command, .option, .control, .shift]))
-    static let onlyTimer = Self("onlyTimer", default: .init(.t, modifiers: [.command, .option, .shift]))
+//    static let onlyTimer = Self("onlyTimer", default: .init(.t, modifiers: [.command, .option, .shift]))
 }

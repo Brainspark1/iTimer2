@@ -40,7 +40,7 @@ struct ChooseView: View {
             
             Form {
                 KeyboardShortcuts.Recorder("Open iTimer2", name: .openApp)
-                KeyboardShortcuts.Recorder("Toggle Only Timer Mode", name: .onlyTimer)
+//              KeyboardShortcuts.Recorder("Toggle Only Timer Mode", name: .onlyTimer)
             }
             .padding()
         

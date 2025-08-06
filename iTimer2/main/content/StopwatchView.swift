@@ -13,6 +13,8 @@ struct StopwatchView: View {
     var body: some View {
         VStack {
             
+            Spacer()
+            
             HStack {
                 
                 Spacer()
@@ -48,7 +50,15 @@ struct StopwatchView: View {
                     }
                 }) {
                     Text(timerManager.stopwatchIsRunning ? "Pause" : "Start")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
                 .padding()
                 .conditionalKeyboardShortcut(isEnabled: !provm.proTrue, KeyboardShortcut(.return, modifiers: .command))
 
@@ -56,11 +66,23 @@ struct StopwatchView: View {
                     self.resetStopwatch()
                 }) {
                     Text("Reset")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
                 .padding()
                 .conditionalKeyboardShortcut(isEnabled: !provm.proTrue, KeyboardShortcut(.return, modifiers: [.command, .shift]))
             }
+            
+            Spacer()
+
         }
+        .padding(.bottom, 20)
         .onAppear() {
             self.appDelegate.isStopwatchRunning = true
             print("stopwatch true")

@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 import Foundation
 import UserNotifications
+import WidgetKit
 
 class TimerManager: ObservableObject {
     var timer: AnyCancellable?
@@ -30,38 +31,40 @@ class TimerManager: ObservableObject {
     @Published var stopwatchTimeElapsed: TimeInterval = 0
     @Published var stopwatchIsRunning: Bool = false
     
+    var provm: ProViewModel
+    @Published var show75Alert: Bool = false
     let un = UNUserNotificationCenter.current()
 
     // Updated HistoryItem to conform to Codable
-    struct HistoryItem: Identifiable, Codable {
-        let id: UUID
-        let name: String
-        let hours: Int
-        let minutes: Int
-        let seconds: Int
-        let timestamp: Date
-        
-        // Custom initializer to assign UUID automatically
-        init(id: UUID = UUID(), name: String, hours: Int, minutes: Int, seconds: Int, timestamp: Date = Date()) {
-            self.id = id
-            self.name = name
-            self.hours = hours
-            self.minutes = minutes
-            self.seconds = seconds
-            self.timestamp = timestamp
-        }
-        
-        var description: String {
-            return "\(name): \(hours)h \(minutes)m \(seconds)s"
-        }
-        
-        var timestampDescription: String {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateStyle = .short
-            dateFormatter.timeStyle = .short
-            return "\(name): \(hours)h \(minutes)m \(seconds)s - \(dateFormatter.string(from: timestamp))"
-        }
-    }
+//    struct HistoryItem: Identifiable, Codable {
+//        let id: UUID
+//        let name: String
+//        let hours: Int
+//        let minutes: Int
+//        let seconds: Int
+//        let timestamp: Date
+//        
+//        // Custom initializer to assign UUID automatically
+//        init(id: UUID = UUID(), name: String, hours: Int, minutes: Int, seconds: Int, timestamp: Date = Date()) {
+//            self.id = id
+//            self.name = name
+//            self.hours = hours
+//            self.minutes = minutes
+//            self.seconds = seconds
+//            self.timestamp = timestamp
+//        }
+//        
+//        var description: String {
+//            return "\(name): \(hours)h \(minutes)m \(seconds)s"
+//        }
+//        
+//        var timestampDescription: String {
+//            let dateFormatter = DateFormatter()
+//            dateFormatter.dateStyle = .short
+//            dateFormatter.timeStyle = .short
+//            return "\(name): \(hours)h \(minutes)m \(seconds)s - \(dateFormatter.string(from: timestamp))"
+//        }
+//    }
 
     // File URL for persisting history
     private var historyFileURL: URL {
@@ -70,7 +73,8 @@ class TimerManager: ObservableObject {
     }
 
     // Initialize and load history
-    init() {
+    init(provm: ProViewModel) {
+        self.provm = provm
         loadHistory()
     }
 
@@ -91,15 +95,25 @@ class TimerManager: ObservableObject {
         }
     }
 
-    // Save history to JSON file
     func saveHistory() {
+        let sharedDefaults = UserDefaults(suiteName: "group.com.nihaalg.iTimer2")
+        do {
+            let encodedHistory = try JSONEncoder().encode(history)
+            sharedDefaults?.set(encodedHistory, forKey: "timerHistory") // Save Data, not raw objects
+            print("Saved encoded history to shared defaults")
+        } catch {
+            print("Failed to encode history for UserDefaults: \(error.localizedDescription)")
+        }
+
         do {
             let data = try JSONEncoder().encode(history)
             try data.write(to: historyFileURL, options: [.atomicWrite, .completeFileProtection])
-            print("History saved successfully.")
+            print("History saved to file")
         } catch {
-            print("Failed to save history: \(error.localizedDescription)")
+            print("Failed to save history to file: \(error.localizedDescription)")
         }
+
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // MARK: - Timer Methods
@@ -123,10 +137,17 @@ class TimerManager: ObservableObject {
             timer?.cancel()
 
             let newItem = HistoryItem(name: name, hours: hours, minutes: minutes, seconds: seconds, timestamp: Date())
-            history.append(newItem)  // Add to history
+            history.append(newItem)
+//            if provm.proTrue == false && history.count < 2 {
+//                history.append(newItem)  // Add to history
+//            } else if provm.proTrue == false && history.count >= 2 {
+//                show75Alert = true
+//            } else if provm.proTrue == true {
+//                history.append(newItem)
+//            }
             saveHistory() // Persist the change
 
-            timer = Timer.publish(every: 1, on: .main, in: .default)
+            timer = Timer.publish(every: 1, on: .main, in: .common)
                 .autoconnect()
                 .sink { _ in
                     DispatchQueue.main.async {
@@ -179,6 +200,36 @@ class TimerManager: ObservableObject {
 
     func clearHistory() {
         history.removeAll()
-        saveHistory() // Persist the change
+
+        // Also clear the UserDefaults shared container key
+        let sharedDefaults = UserDefaults(suiteName: "group.com.nihaalg.iTimer2")
+        sharedDefaults?.removeObject(forKey: "timerHistory")
+        
+        saveHistory()
+        WidgetCenter.shared.reloadTimelines(ofKind: "iTimer2HistoryWidget")
+        saveHistory() // This will now save empty array (optional but good practice)
+    }
+    
+    func fullyClearHistory() {
+        history.removeAll()
+        
+        // Clear UserDefaults
+        let sharedDefaults = UserDefaults(suiteName: "group.nihaalg.iTimer2")
+        sharedDefaults?.removeObject(forKey: "timerHistory")
+        sharedDefaults?.synchronize()
+        UserDefaults(suiteName: "group.com.nihaalg.iTimer2")?.removeObject(forKey: "timerHistory")
+        
+        // Delete JSON file if exists
+        do {
+            if FileManager.default.fileExists(atPath: historyFileURL.path) {
+                try FileManager.default.removeItem(at: historyFileURL)
+                print("History JSON file deleted.")
+            }
+        } catch {
+            print("Failed to delete history JSON file: \(error)")
+        }
+
+        saveHistory()  // Should save empty array to UserDefaults again (optional)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }

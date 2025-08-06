@@ -31,17 +31,32 @@ struct PopoutView: View {
                     timerManager.isRunning ? pauseTimer() : startTimer()
                 }) {
                     Text(timerManager.isRunning ? "Pause" : "Start")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
                 .keyboardShortcut(.return, modifiers: .command)
-                .fixedSize()
                 .padding()
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
                 
                 Button(action: stopTimer) {
                     Text("Stop")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
                 .keyboardShortcut(.return, modifiers: [.command, .shift])
                 .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
             }
+            .padding()
         }
         .padding()
     }
@@ -95,14 +110,32 @@ struct PomoPopoutView: View {
                     }
                 }) {
                     Text(viewModel.isTimerRunning ? "Pause" : "Start")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
+                .padding()
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
                 
                 Button(action: {
                     viewModel.stopTimer()
                     viewModel.resetTimer(workDuration: viewModel.getWorkDuration())
                 }) {
                     Text("Reset")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
+                .padding()
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
             }
             .padding()
         }

@@ -12,13 +12,27 @@ struct PomodoroView: View {
     @Binding var showPomodoro: Bool
     @AppStorage("workDuration") private var workDuration: String = "25" // Stored in minutes
     @AppStorage("breakDuration") private var breakDuration: String = "5"  // Stored in minutes
+    @State private var cycleStage = 0
+//    @AppStorage("numberOfWork") var numberOfWork = 0
+//    @AppStorage("numberOfBreak") var numberOfBreak = 0
+    
+    private let stages = [
+            ("Work", 1500), // 25 minutes
+            ("Break", 300),  // 5 minutes
+            ("Work", 1500), // 25 minutes
+            ("Break", 300),  // 5 minutes
+            ("Work", 1500), // 25 minutes
+            ("Break", 300),  // 5 minutes
+            ("Work", 1500), // 25 minutes
+            ("Break", 1800) // 30 minutes
+        ]
 
     var body: some View {
         VStack {
             HStack {
                 Spacer()
                 Spacer()
-                Text("Pomodoro Timer")
+                Text("Pomodoro")
                     .font(.largeTitle)
                     .padding()
                 Spacer()
@@ -40,17 +54,25 @@ struct PomodoroView: View {
             }
 
             Text(timerViewModel.isOnBreak ? "Break" : "Work")
-                .font(.title)
+                .font(.system(size: 20))
                 .padding()
+                .opacity(0.7)
+//
+//            Text(stages[cycleStage].0)
+//                .font(.title)
+//                .padding()
+
 
             Text("\(timeString(time: timerViewModel.timeRemaining))")
-                .font(.largeTitle)
+                .font(.system(size: 30))
                 .padding()
                 .onTapGesture {
                     openPomTimer()
                 }
 
             HStack {
+                Spacer()
+                
                 Button(action: {
                     if timerViewModel.isTimerRunning {
                         timerViewModel.stopTimer()
@@ -59,15 +81,37 @@ struct PomodoroView: View {
                     }
                 }) {
                     Text(timerViewModel.isTimerRunning ? "Pause" : "Start")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
+                
+                Spacer()
                 
                 Button(action: {
                     timerViewModel.resetTimer(workDuration: getWorkDuration())
                 }) {
                     Text("Reset")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
+                
+                Spacer()
             }
             .padding()
+            
+            Spacer()
         }
         .onAppear {
             timerViewModel.timeRemaining = getWorkDuration() * 60
@@ -108,5 +152,11 @@ struct PomodoroView: View {
 
     private func stopTimer() {
         timerViewModel.stopTimer()
+    }
+    
+    private func nextStage() {
+        cycleStage = (cycleStage + 1) % stages.count
+        timerManager.remainingTime = stages[cycleStage].1
+        timerManager.isBreakTime = (stages[cycleStage].0 == "Break")
     }
 }

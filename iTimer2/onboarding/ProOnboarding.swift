@@ -18,6 +18,10 @@ struct ProOnboarding1View: View {
             .font(.system(size: 13))
             .opacity(0.5)
             .padding()
+        Text("Note: Please restart iTimer2 to activate all the Pro features")
+            .font(.system(size: 13))
+            .opacity(0.5)
+            .padding()
         Spacer()
         Button(action: {
             selectedTab += 1
@@ -57,9 +61,9 @@ struct ProOnboarding2View: View {
                 Spacer()
             }
             
-            Image("prohistory")
+            Image("newHistory")
                 .resizable()
-                .frame(width: 175, height: 185)
+                .frame(width: 187, height: 240)
                 .cornerRadius(7)
                 .shadow(color: .blue, radius: 5)
                 .padding()
@@ -105,7 +109,8 @@ struct ProOnboarding6View: View {
                 
                 Text("""
                 Right-click the start timer button
-                to open a list of curated presets
+                to open a list of curated presets 
+                that you can manage and add to
                 """)
                 .font(.system(size: 13))
                 .opacity(0.5)
@@ -115,9 +120,9 @@ struct ProOnboarding6View: View {
                 Spacer()
             }
             
-            Image("propresets")
+            Image("newNewProPresets")
                 .resizable()
-                .frame(width: 195, height: 185)
+                .frame(width: 166, height: 220)
                 .cornerRadius(7)
                 .shadow(color: .purple, radius: 5)
                 .padding()
@@ -154,9 +159,9 @@ struct ProOnboarding3View: View {
         
         HStack {
             
-            Image("prokeys")
+            Image("newProKeyboard")
                 .resizable()
-                .frame(width: 240, height: 200)
+                .frame(width: 340, height: 200)
                 .cornerRadius(7)
                 .shadow(color: .gray, radius: 5)
                 .padding()
@@ -238,7 +243,7 @@ struct ProOnboarding4View: View {
                 Spacer()
             }
             
-            Image("proprogress")
+            Image("newProBar")
                 .resizable()
                 .frame(width: 220, height: 185)
                 .cornerRadius(7)
@@ -278,9 +283,9 @@ struct ProOnboarding5View: View {
         
         HStack {
             
-            Image("proalarm")
+            Image("newProSound")
                 .resizable()
-                .frame(width: 240, height: 200)
+                .frame(width: 340, height: 200)
                 .cornerRadius(7)
                 .shadow(color: .yellow, radius: 5)
                 .padding()

@@ -20,7 +20,7 @@ struct NewOnboardingView: View {
                 NewOnboard1View(selectedTab: $selectedTab)
             } else if selectedTab == 1 {
                 NewOnboard2View(selectedTab: $selectedTab)
-                    .environmentObject(TimerManager())
+                    .environmentObject(TimerManager(provm: ProViewModel()))
             } else if selectedTab == 2 {
                 NewOnboard3View(selectedTab: $selectedTab)
             } else if selectedTab == 3 {
@@ -34,7 +34,7 @@ struct NewOnboardingView: View {
             } else if selectedTab == 7 {
                 NewOnboard8View(selectedTab: $selectedTab)
             } else if selectedTab == 8 {
-                NewOnboard9View(selectedTab: $selectedTab, onFinish: onFinish)
+                NewOnboard10View(selectedTab: $selectedTab, onFinish: onFinish)
             }
         }
     }
@@ -154,9 +154,9 @@ struct NewOnboard3View: View {
                 Spacer()
             }
             
-            Image("iTimer2NewLayout")
+            Image("newMenubar")
                 .resizable()
-                .frame(width: 190, height: 160)
+                .frame(width: 190, height: 215)
                 .cornerRadius(7)
                 .shadow(color: .gray, radius: 5)
                 .padding()
@@ -193,9 +193,9 @@ struct NewOnboard4View: View {
         
         HStack {
             
-            Image("pom")
+            Image("newPom")
                 .resizable()
-                .frame(width: 200, height: 200)
+                .frame(width: 200, height: 225)
                 .cornerRadius(7)
                 .shadow(color: .red, radius: 5)
                 .padding()
@@ -258,8 +258,9 @@ struct NewOnboard5View: View {
                     .font(.largeTitle)
                 
                 Text("""
-                Check history to see what
-                you did and to stay on track
+                Check and search through history 
+                to see what you did and to stay 
+                on track
                 """)
                 .font(.system(size: 13))
                 .opacity(0.5)
@@ -271,9 +272,9 @@ struct NewOnboard5View: View {
                 Spacer()
             }
             
-            Image("history")
+            Image("newHistory")
                 .resizable()
-                .frame(width: 225, height: 250)
+                .frame(width: 225, height: 280)
                 .cornerRadius(7)
                 .shadow(color: .blue, radius: 5)
                 .padding()
@@ -310,9 +311,9 @@ struct NewOnboard6View: View {
         
         HStack {
             
-            Image("name")
+            Image("newName")
                 .resizable()
-                .frame(width: 200, height: 75)
+                .frame(width: 245, height: 75)
                 .cornerRadius(7)
                 .shadow(color: .yellow, radius: 5)
                 .padding()
@@ -503,7 +504,7 @@ struct NewOnboard8View: View {
             HStack {
                 Image(systemName: "checkmark.circle")
                     .foregroundColor(.green)
-                Text("Alarm Sounds")
+                Text("Customisable Alarm Sounds")
             }
             .padding(2)
             
@@ -522,52 +523,121 @@ struct NewOnboard8View: View {
             .opacity(0.5)
             .padding()
         
-        Button("Go Pro") {
-            
-            provm.proTrue = true
-            selectedTab += 1
-            openProOnboarding()
-            UserDefaults.standard.set(true, forKey: "proModeTrueBool")
-            
-        }
-        .shadow(color: .green, radius: 5)
+//        Button("Go Pro") {
+//            
+//            provm.proTrue = true
+//            selectedTab += 1
+//            openProOnboarding()
+//            UserDefaults.standard.set(true, forKey: "proModeTrueBool")
+//            
+//        }
+//        .shadow(color: .green, radius: 5)
+        
+        Text("You can choose to go Pro later in preferences")
         
         Spacer()
         
-        Button("Skip for now", action: { selectedTab += 1 })
+//        Button("Continue", action: { selectedTab += 1 })
+//            .padding()
+//            .buttonStyle(BorderlessButtonStyle())
+//
+//        Spacer()
+        
+        HStack {
+            Button(action: {
+                selectedTab -= 1
+            }) {
+                Image(systemName: "arrow.left.circle")
+            }
             .padding()
             .buttonStyle(BorderlessButtonStyle())
-        
-        Spacer()
+            .font(.title2)
+            
+            Button(action: {
+                selectedTab += 1
+            }) {
+                Image(systemName: "arrow.right.circle")
+            }
+            .padding()
+            .buttonStyle(BorderlessButtonStyle())
+            .font(.title2)
+        }
     }
     
-    func openProOnboarding() {
-        let newWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 750, height: 450),
-            styleMask: [.titled, .closable, .resizable, .miniaturizable],
-            backing: .buffered, defer: false)
-        let onboardIdentifier = NSUserInterfaceItemIdentifier("proonboarding")
-        
-        newWindow.center()
-        newWindow.title = "Pro Onboarding Screen"
-        newWindow.identifier = onboardIdentifier
-        newWindow.isReleasedWhenClosed = false
-        
-        let onboardingView = NewProOnboardingView()
-            .frame(width: 750, height: 425)
-        
-        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager()))
-        newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        newWindow.standardWindowButton(.zoomButton)?.isHidden = true
-        
-        //hide title and bar
-        newWindow.titleVisibility = .hidden
-        newWindow.makeKeyAndOrderFront(nil)
-        newWindow.orderFrontRegardless()
-    }
+//    func openProOnboarding() {
+//        let newWindow = NSWindow(
+//            contentRect: NSRect(x: 0, y: 0, width: 750, height: 450),
+//            styleMask: [.titled, .closable, .resizable, .miniaturizable],
+//            backing: .buffered, defer: false)
+//        let onboardIdentifier = NSUserInterfaceItemIdentifier("proonboarding")
+//        
+//        newWindow.center()
+//        newWindow.title = "Pro Onboarding Screen"
+//        newWindow.identifier = onboardIdentifier
+//        newWindow.isReleasedWhenClosed = false
+//        
+//        let onboardingView = NewProOnboardingView()
+//            .frame(width: 750, height: 425)
+//        
+//        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager()))
+//        newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
+//        newWindow.standardWindowButton(.zoomButton)?.isHidden = true
+//        
+//        //hide title and bar
+//        newWindow.titleVisibility = .hidden
+//        newWindow.makeKeyAndOrderFront(nil)
+//        newWindow.orderFrontRegardless()
+//    }
 }
 
-struct NewOnboard9View: View {
+//struct NewOnboard9View: View {
+//    @Binding var selectedTab: Int
+//    
+//    var body: some View {
+//        
+//        VStack {
+//            
+//            Spacer()
+//            
+//            Text("iTimer2 Updates Newsletter")
+//                .font(.largeTitle)
+//                .padding()
+//            
+//            Text("""
+//    Join the iTimer2 App Updates email newsletter at https://itimer2updates.substack.com, allowing us to easily send you new updates of iTimer2 straight to your inbox.
+//    """)
+//            .font(.system(size: 13))
+//            .opacity(0.5)
+//            .frame(width: 250)
+//            .multilineTextAlignment(.center)
+//            .padding()
+//            
+//            Spacer()
+//            
+//            HStack {
+//                Button(action: {
+//                    selectedTab -= 1
+//                }) {
+//                    Image(systemName: "arrow.left.circle")
+//                }
+//                .padding()
+//                .buttonStyle(BorderlessButtonStyle())
+//                .font(.title2)
+//                
+//                Button(action: {
+//                    selectedTab += 1
+//                }) {
+//                    Image(systemName: "arrow.right.circle")
+//                }
+//                .padding()
+//                .buttonStyle(BorderlessButtonStyle())
+//                .font(.title2)
+//            }
+//        }
+//    }
+//}
+
+struct NewOnboard10View: View {
     
     @Binding var selectedTab: Int
     @EnvironmentObject var timerManager: TimerManager
@@ -595,8 +665,17 @@ struct NewOnboard9View: View {
         .opacity(0.5)
         .frame(width: 250)
         .multilineTextAlignment(.center)
-        .padding()
+        .padding([.top, .leading, .trailing])
         
+        Text("""
+            Join the iTimer2 App Updates email newsletter at https://itimer2updates.substack.com, allowing us to easily send you new updates of iTimer2 straight to your inbox.
+            """)
+            .font(.system(size: 13))
+            .opacity(0.5)
+            .frame(width: 250)
+            .multilineTextAlignment(.center)
+            .padding()
+
         Spacer()
         
         Button(action: {
@@ -607,7 +686,10 @@ struct NewOnboard9View: View {
             Text("Complete Onboarding")
         }
         .shadow(color: .green, radius: 5)
+        
         Spacer()
+        Spacer()
+        
         Button(action: {
             selectedTab -= 1
         }) {
@@ -616,7 +698,5 @@ struct NewOnboard9View: View {
         .padding()
         .buttonStyle(BorderlessButtonStyle())
         .font(.title2)
-        
-        Spacer()
     }
 }

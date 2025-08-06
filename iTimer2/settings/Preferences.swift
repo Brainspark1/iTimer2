@@ -17,6 +17,7 @@ struct GeneralView: View {
     
     @AppStorage("launchAtLogin") private var launchAtLogin = false
     @EnvironmentObject var timerManager: TimerManager
+    @StateObject var provm = ProViewModel()
     
     let un = UNUserNotificationCenter.current()
     
@@ -30,9 +31,25 @@ struct GeneralView: View {
                 .foregroundColor(.green)
                 .shadow(color: .mint, radius: 30)
             
-            Text("Version: \(getAppVersion())")
-                .font(.title3)
-                .padding()
+            HStack {
+                
+                if provm.proTrue {
+                    Text("Version: \(getAppVersion())")
+                        .font(.title3)
+                        .padding([.leading, .top, .bottom])
+                } else {
+                    Text("Version: \(getAppVersion())")
+                        .font(.title3)
+                        .padding()
+                }
+                
+                if provm.proTrue {
+                    Text("(Pro)")
+                        .font(.title3)
+                        .padding(.trailing)
+                }
+                
+            }
             
             LaunchAtLogin.Toggle("Launch on start")
                 .toggleStyle(.switch)
@@ -169,76 +186,81 @@ struct KeyView: View {
     }
 }
 
-struct LayoutView: View {
-    
-    @EnvironmentObject private var layoutvm: LayoutViewModel
-    @EnvironmentObject private var provm: ProViewModel
-    @State private var showPopover = false
-    
-    var body: some View {
-        
-        HStack(spacing: 20) {
-            Button(action: {
-                showPopover.toggle()
-            }) {
-                Image(systemName: "questionmark.circle")
-                    .font(.title3)
-            }
-            .popover(isPresented: $showPopover, attachmentAnchor: .point(.bottom), arrowEdge: .bottom) {
-                Text("Show which feature buttons are on your screen - don't worry, you can still access them with keyboard shortcuts!")
-                    .padding()
-            }
-            .buttonStyle(BorderlessButtonStyle())
-            
-            Toggle("Show Pomodoro", isOn: $layoutvm.showPomButton)
-            Toggle("Show Stopwatch", isOn: $layoutvm.showStopwatchButton)
-            Toggle("Show History", isOn: $layoutvm.showHistoryButton)
-        }
-        .padding(40)
-        
-        if provm.proTrue {
-            Toggle("Only Timer", isOn: $layoutvm.onlyTimerMode)
-                .toggleStyle(.switch)
-                .conditionalKeyboardShortcut(isEnabled: !provm.proTrue, KeyboardShortcut("t", modifiers: [.command, .shift, .option]))
-        }
-        
-        Spacer()
-        
-    }
-}
+//struct LayoutView: View {
+//    
+//    @EnvironmentObject private var layoutvm: LayoutViewModel
+//    @EnvironmentObject private var provm: ProViewModel
+//    @State private var showPopover = false
+//    
+//    var body: some View {
+//        
+//        HStack(spacing: 20) {
+//            Button(action: {
+//                showPopover.toggle()
+//            }) {
+//                Image(systemName: "questionmark.circle")
+//                    .font(.title3)
+//            }
+//            .popover(isPresented: $showPopover, attachmentAnchor: .point(.bottom), arrowEdge: .bottom) {
+//                Text("Show which feature buttons are on your screen - don't worry, you can still access them with keyboard shortcuts!")
+//                    .padding()
+//            }
+//            .buttonStyle(BorderlessButtonStyle())
+//            
+//            Toggle("Show Pomodoro", isOn: $layoutvm.showPomButton)
+//            Toggle("Show Stopwatch", isOn: $layoutvm.showStopwatchButton)
+//            Toggle("Show History", isOn: $layoutvm.showHistoryButton)
+//        }
+//        .padding(40)
+//        
+//        if provm.proTrue {
+//            Toggle("Only Timer", isOn: $layoutvm.onlyTimerMode)
+//                .toggleStyle(.switch)
+//                .conditionalKeyboardShortcut(isEnabled: !provm.proTrue, KeyboardShortcut("t", modifiers: [.command, .shift, .option]))
+//        }
+//        
+//        Spacer()
+//        
+//    }
+//}
+
+import SwiftUI
+import AVFoundation
+import UniformTypeIdentifiers
 
 struct TimerView: View {
     @Binding var fontSize: CGFloat
-    @AppStorage("workDuration") private var workDuration: String = "25" // Stored in minutes
-    @AppStorage("breakDuration") private var breakDuration: String = "5"  // Stored in minutes
+    @AppStorage("workDuration") private var workDuration: String = "25"
+    @AppStorage("breakDuration") private var breakDuration: String = "5"
     @State private var showPopover = false
     @EnvironmentObject var timerViewModel: TimerViewModel
     @EnvironmentObject var soundModel: SoundModel
     @EnvironmentObject var provm: ProViewModel
     @State private var audioPlayer: AVAudioPlayer?
-    
-    let soundFiles = ["none","alarm", "notification", "scanner"]
+    @State var showManageSoundsSheet = false
+
+    @State private var hoveringSound: String?
+    @State private var lastValidSelection: String = "alarm"
+
+    let defaultSounds = ["none", "alarm", "notification", "scanner"]
+    let uploadLabel = "Upload Custom Sound..."
 
     var body: some View {
         VStack {
-            Slider(
-                value: $fontSize,
-                in: 25...50,
-                step: 5
-            ) {
+            // Font Size Slider
+            Slider(value: $fontSize, in: 42...50, step: 2) {
                 Text("Timer Size")
                     .padding(.trailing, 2)
             }
             .padding()
-            
+
+            // Timer Adjustments
             HStack {
                 Text("Pomodoro Timer Adjustments:")
                     .padding()
                     .font(.title2)
-                
-                Button(action: {
-                    showPopover.toggle()
-                }) {
+
+                Button(action: { showPopover.toggle() }) {
                     Image(systemName: "questionmark.circle")
                         .font(.title3)
                 }
@@ -248,7 +270,8 @@ struct TimerView: View {
                 }
                 .buttonStyle(BorderlessButtonStyle())
             }
-            
+
+            // Duration Text Fields
             HStack {
                 VStack {
                     Text("Work Duration (min)")
@@ -259,7 +282,7 @@ struct TimerView: View {
                             validateAndSetDuration(newValue: newValue, isWorkDuration: true)
                         }
                 }
-                
+
                 VStack {
                     Text("Break Duration (min)")
                     TextField("Enter break duration", text: $breakDuration)
@@ -270,41 +293,138 @@ struct TimerView: View {
                         }
                 }
             }
-            
+
+            // Sound Picker
             if provm.proTrue {
                 HStack {
                     Picker("Alarm Sound", selection: $soundModel.selectedSound) {
-                        ForEach(soundFiles, id: \.self) { sound in
+                        // Default sounds
+                        ForEach(defaultSounds, id: \.self) { sound in
                             Text(sound).tag(sound)
+                        }
+
+                        // Uploaded sounds
+                        ForEach(Array(soundModel.uploadedSounds.keys), id: \.self) { sound in
+                            HStack {
+                                Text(sound)
+                                if hoveringSound == sound {
+                                    Spacer()
+                                    Button {
+                                        soundModel.removeSound(named: sound)
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.red)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                    .frame(width: 20, height: 20)
+                                }
+                            }
+                            .tag(sound)
+                            .onHover { hovering in
+                                hoveringSound = hovering ? sound : nil
+                            }
+                        }
+                        
+                        Divider()
+
+                        // Upload sound
+                        Text(uploadLabel)
+                            .tag(uploadLabel)
+                    }
+                    .onChange(of: soundModel.selectedSound) { newValue in
+                        if newValue == uploadLabel {
+                            selectWavFile()
+                            soundModel.selectedSound = lastValidSelection
+                        } else {
+                            lastValidSelection = newValue
                         }
                     }
                     .pickerStyle(MenuPickerStyle())
+                    .frame(minWidth: 150)
                     .padding()
                     
-                    Button("Preview Sound", action: playSound)
-                        .padding()
+                    Button(action: {
+                        playSound()
+                    }) {
+                        Text("Preview Sound")
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.trailing)
+                    
                 }
+                .sheet(isPresented: $showManageSoundsSheet) {
+                    ManageUploadedSoundsView()
+                        .environmentObject(soundModel)
             }
+
+                Button(action: {
+                    showManageSoundsSheet.toggle()
+                }) {
+                    Text("Manage Uploaded Sounds")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.black)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.leading)
+            
+                }
         }
     }
-    
+
+    @ViewBuilder
+    func soundRow(title: String, isCustom: Bool) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+
+            if soundModel.selectedSound == title {
+                Image(systemName: "checkmark")
+            }
+
+            if isCustom, hoveringSound == title {
+                Button(action: {
+                    soundModel.removeSound(named: title)
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.red)
+                        .padding(.leading, 4)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            soundModel.selectedSound = title
+            lastValidSelection = title
+        }
+        .onHover { hovering in
+            hoveringSound = hovering ? title : nil
+        }
+        .padding(.horizontal, 4)
+    }
+
     func validateAndSetDuration(newValue: String, isWorkDuration: Bool) {
         if newValue.isEmpty {
-            // Allow empty input while the user is editing
             if isWorkDuration {
-                timerViewModel.setWorkDuration(0) // Set to 0 but allow further editing
+                timerViewModel.setWorkDuration(0)
             } else {
-                timerViewModel.setBreakDuration(0) // Set to 0 but allow further editing
+                timerViewModel.setBreakDuration(0)
             }
         } else if let duration = Int(newValue), duration > 0 {
-            // If valid, update the timer duration
             if isWorkDuration {
                 timerViewModel.setWorkDuration(duration)
             } else {
                 timerViewModel.setBreakDuration(duration)
             }
         } else {
-            // If the input is invalid (not a number), revert to the previous valid value
             if isWorkDuration {
                 workDuration = "\(timerViewModel.workDuration)"
             } else {
@@ -314,16 +434,34 @@ struct TimerView: View {
     }
 
     func playSound() {
-        guard let soundURL = Bundle.main.url(forResource: soundModel.selectedSound, withExtension: "wav") else {
-            print("Sound file not found")
-            return
+        let selected = soundModel.selectedSound
+
+        if let url = soundModel.uploadedSounds[selected] {
+            do {
+                audioPlayer = try AVAudioPlayer(contentsOf: url)
+                audioPlayer?.play()
+            } catch {
+                print("Failed to play uploaded sound: \(error.localizedDescription)")
+            }
+        } else if selected != "none",
+                  let bundledURL = Bundle.main.url(forResource: selected, withExtension: "wav") {
+            do {
+                audioPlayer = try AVAudioPlayer(contentsOf: bundledURL)
+                audioPlayer?.play()
+            } catch {
+                print("Failed to play bundled sound: \(error.localizedDescription)")
+            }
         }
-        
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
-            audioPlayer?.play()
-        } catch {
-            print("Failed to play sound: \(error.localizedDescription)")
+    }
+
+    func selectWavFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.wav]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+
+        if panel.runModal() == .OK, let selectedURL = panel.url {
+            soundModel.addSound(from: selectedURL)
         }
     }
 }
@@ -331,10 +469,20 @@ struct TimerView: View {
 struct ProView: View {
     
     @EnvironmentObject var provm: ProViewModel
+    @Environment(\.openURL) var openURL
     
     var body: some View {
         
         Spacer()
+        
+//        Button(action: {
+//            provm.upgradeButtonIsClosed = true
+//        }) {
+//            Text("Dismiss Upgrade Button")
+//        }
+//        .buttonStyle(.plain)
+//        
+//        Spacer()
         
         Form {
             HStack {
@@ -382,21 +530,59 @@ struct ProView: View {
             .opacity(0.5)
             .padding()
         
-        Button("Go Pro") {
+        Button(action: {
+            if let url = URL(string: "https://sunny-sprinkles-2539a3.netlify.app") {
+                openURL(url)
+            }
             
-            provm.proTrue = true
-            openProOnboarding()
-            UserDefaults.standard.set(true, forKey: "proModeTrueBool")
-            
+            openProPasswordField()
+        }) {
+            Text("Go Pro")
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.green)
+                .foregroundColor(.white)
+                .cornerRadius(8)
         }
-        .shadow(color: .green, radius: 5)
+        .buttonStyle(PlainButtonStyle())
+        .frame(width: 102, height: 26)
+        .shadow(color: .green, radius: 10)
         
-        if provm.proTrue {
+        
+        
+        if provm.proTrue == true {
             Text("You're now Pro!")
                 .padding()
         }
         
         Spacer()
+    }
+    
+    func openProPasswordField() {
+        let newWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 450),
+            styleMask: [.titled, .closable, .resizable, .miniaturizable],
+            backing: .buffered, defer: false)
+        let onboardIdentifier = NSUserInterfaceItemIdentifier("proPassField")
+        
+        newWindow.center()
+        newWindow.title = "Pro Password Field"
+        newWindow.identifier = onboardIdentifier
+        newWindow.isReleasedWhenClosed = false
+        
+        let onboardingView = ProPasswordFieldView()
+            .frame(width: 300, height: 425)
+        
+        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(ProViewModel()))
+        newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        newWindow.standardWindowButton(.zoomButton)?.isHidden = true
+        
+        //hide title and bar
+        newWindow.titleVisibility = .hidden
+        newWindow.makeKeyAndOrderFront(nil)
+        newWindow.orderFrontRegardless()
+        
+        provm.passwordWindow = newWindow
     }
     
     func openProOnboarding() {
@@ -414,7 +600,7 @@ struct ProView: View {
         let onboardingView = NewProOnboardingView()
             .frame(width: 750, height: 425)
         
-        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager()))
+        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager(provm: ProViewModel())))
         newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
         newWindow.standardWindowButton(.zoomButton)?.isHidden = true
         
@@ -425,6 +611,143 @@ struct ProView: View {
     }
 }
 
+struct ProPasswordFieldView: View {
+    @EnvironmentObject var provm: ProViewModel
+    @State private var passIsCorrect: Bool? = nil
+    @State private var showCloseText: Bool = false
+    
+    var body: some View {
+        Text("Enter the license key that you were given at the end of filling out the Payment Form.")
+            .padding()
+        
+        SecureField("", text: $provm.userProPassword)
+//            .onChange(of: provm.userProPassword) {
+//                    if provm.userProPassword == provm.actualProPassword {
+//                        provm.proTrue = true
+//                        print("Password Correct")
+//                        openProOnboarding()
+//                        
+//                        UserDefaults.standard.set(true, forKey: "proModeTrueBool")
+//                }
+//            }
+            .padding()
+        
+        Button(action: {
+            if provm.userProPassword == provm.actualProPassword {
+                print(provm.proTrue)
+                provm.proTrue = true
+                print(provm.proTrue)
+                passIsCorrect = true
+                provm.passwordWindow?.close()
+                print("Key correct!")
+                UserDefaults.standard.set(true, forKey: "proModeTrueBool")
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    openProOnboarding()
+                    showCloseText = true
+                }
+            }
+            
+            if provm.userProPassword != provm.actualProPassword {
+                passIsCorrect = false
+            }
+        }) {
+            Text("Check Key")
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.blue)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+        }
+        .padding()
+        .padding()
+        .fixedSize()
+        .buttonStyle(PlainButtonStyle())
+        .frame(width: 112, height: 26)
+        
+        if passIsCorrect == true {
+            Text("Correct Key ✅")
+                .padding()
+            if !showCloseText {
+                Text("Please wait...")
+            } else if showCloseText {
+                Text("You may now close this window")
+                    .padding()
+            }
+            
+        } else if passIsCorrect == false {
+            Text("Incorrect Key ❌")
+    }
+        
+}
+    
+    func openProOnboarding() {
+        let newWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 750, height: 450),
+            styleMask: [.titled, .closable, .resizable, .miniaturizable],
+            backing: .buffered, defer: false)
+        let onboardIdentifier = NSUserInterfaceItemIdentifier("proonboarding")
+        
+        newWindow.center()
+        newWindow.title = "Pro Onboarding Screen"
+        newWindow.identifier = onboardIdentifier
+        newWindow.isReleasedWhenClosed = false
+        
+        let onboardingView = NewProOnboardingView()
+            .frame(width: 750, height: 425)
+        
+        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager(provm: ProViewModel())))
+        newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        newWindow.standardWindowButton(.zoomButton)?.isHidden = true
+        
+        //hide title and bar
+        newWindow.titleVisibility = .hidden
+        newWindow.makeKeyAndOrderFront(nil)
+        newWindow.orderFrontRegardless()
+    }
+}
+
+struct HelpAndFeedbackView: View {
+    
+    @State private var buttonText = "Copy Address"
+    let addressToCopy = "brainsparkteam@gmail.com"
+
+        var body: some View {
+            Text("We'd love to hear from you! Feel free to reach out with any questions or feedback.")
+                .opacity(0.8)
+            
+            HStack {
+                Text("Contact/Support Email: brainsparkteam@gmail.com")
+                
+                Button(action: {
+                    copyToClipboard(addressToCopy)
+                    buttonText = "Copied!"
+                    
+                    // Reset the button text after 5 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        buttonText = "Copy Address"
+                    }
+                }) {
+                    Text(buttonText)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding()
+                
+            }
+        }
+
+        func copyToClipboard(_ text: String) {
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(text, forType: .string)
+        }
+    }
+
 struct DevNewOnboardingView: View {
     @State private var selectedTab = 0
     
@@ -434,7 +757,7 @@ struct DevNewOnboardingView: View {
                 NewOnboard1View(selectedTab: $selectedTab)
             } else if selectedTab == 1 {
                 NewOnboard2View(selectedTab: $selectedTab)
-                    .environmentObject(TimerManager())
+                    .environmentObject(TimerManager(provm: ProViewModel()))
             } else if selectedTab == 2 {
                 NewOnboard3View(selectedTab: $selectedTab)
             } else if selectedTab == 3 {
@@ -448,8 +771,8 @@ struct DevNewOnboardingView: View {
             } else if selectedTab == 7 {
                 NewOnboard8View(selectedTab: $selectedTab)
             } else if selectedTab == 8 {
-                NewOnboard9View(selectedTab: $selectedTab)
-                    .environmentObject(TimerManager())
+                NewOnboard10View(selectedTab: $selectedTab)
+                    .environmentObject(TimerManager(provm: ProViewModel()))
             }
         }
     }
@@ -460,22 +783,104 @@ struct DevNewOnboardingView: View {
         @EnvironmentObject var timerManager: TimerManager
         @EnvironmentObject var provm: ProViewModel
         let textToCopy: String = "https://github.com/Brainspark1/iTimer2"
+        let otherTextToCopy: String = "https://brainsparkteam.wixstudio.com/itimer2"
+        @Environment(\.openURL) var openURL
+        @State private var showOnboardingAlert: Bool = false
         
         var body: some View {
             
             HStack {
-                Text("https://github.com/Brainspark1/iTimer2")
-                    .padding()
+                Button(action: {
+                    if let url = URL(string: "https://github.com/Brainspark1/iTimer2") {
+                        openURL(url)
+                    }
+                }) {
+                    Text("Github: github.com/Brainspark1/iTimer2")
+                }
+                .buttonStyle(.plain)
                 
                 Button(action: {
-                    copyToClipboard(textToCopy)
+                    if let url = URL(string: "https://github.com/Brainspark1/iTimer2") {
+                        openURL(url)
+                    }
                 }) {
-                    Text("Copy Link")
+                    Text("Open Link")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
+                .padding()
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
                 
                 Spacer()
             }
-            .padding(23)
+            .padding([.top, .leading, .trailing], 23)
+            
+            HStack {
+                Button(action: {
+                    if let url = URL(string: "https://brainsparkteam.wixstudio.com/itimer2") {
+                        openURL(url)
+                    }
+                }) {
+                    Text("Website: brainsparkteam.wixstudio.com/itimer2")
+                }
+                .buttonStyle(.plain)
+                
+                Button(action: {
+                    if let url = URL(string: "https://brainsparkteam.wixstudio.com/itimer2") {
+                        openURL(url)
+                    }
+                }) {
+                    Text("Open Link")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .padding()
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
+                
+                Spacer()
+            }
+            .padding([.top, .leading, .trailing], 23)
+            
+            HStack {
+                Button(action: {
+                    if let url = URL(string: "https://itimer2updates.substack.com") {
+                        openURL(url)
+                    }
+                }) {
+                    Text("Updates Newsletter: itimer2updates.substack.com")
+                }
+                .buttonStyle(.plain)
+                
+                Button(action: {
+                    if let url = URL(string: "https://itimer2updates.substack.com") {
+                        openURL(url)
+                    }
+                }) {
+                    Text("Open Link")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .padding()
+                .fixedSize()
+                .buttonStyle(PlainButtonStyle())
+                .frame(width: 112, height: 26)
+                
+                Spacer()
+            }
+            .padding([.top, .leading, .trailing], 23)
             
             Spacer()
             Spacer()
@@ -486,15 +891,106 @@ struct DevNewOnboardingView: View {
             HStack {
                 Spacer()
                 
-                Button("End Pro") {
+                Button(action: {
                     provm.proTrue = false
+                }) {
+                    Text("End Pro")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .padding()
+                .buttonStyle(PlainButtonStyle())
+                
+                VStack {
+                    
+//                    if provm.proTrue == true {
+//                        Button(action: {
+//                            openProOnboarding()
+//                        }) {
+//                            Text("Open Pro Onboarding")
+//                                .padding(.horizontal, 12)
+//                                .padding(.vertical, 6)
+//                                .background(.black)
+//                                .foregroundColor(.white)
+//                                .cornerRadius(8)
+//                        }
+//                        .buttonStyle(PlainButtonStyle())
+//                        .fixedSize()
+//                        .padding()
+//                    }
+//                    
+                    Button(action: {
+                        if !provm.proTrue {
+                            openOnboarding()
+                        } else {
+                            showOnboardingAlert = true
+                        }
+                    }) {
+                        if !provm.proTrue {
+                            Text("Open Onboarding")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(.black)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        } else {
+                            Text("Open Onboarding...")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(.black)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .fixedSize()
+                    
                 }
                 
-                Button("Open Onboarding", action: openOnboarding)
-                    .padding()
+                Button(action: {
+                    timerManager.fullyClearHistory()
+                }) {
+                    Text("Clear History JSON")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .fixedSize()
+                .padding()
+                
+                Button(action: {
+                    DispatchQueue.main.async {
+                        TextFileExporter.export(items: timerManager.history.map { $0.timestampDescription })
+                    }
+                }) {
+                    Text("Export Logs")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.black)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
             }
             .padding(10)
             .padding(.bottom, 10)
+            .alert("Which Onboarding?", isPresented: $showOnboardingAlert) {
+                Button("Pro") {
+                    openProOnboarding()
+                }
+                Button("Free") {
+                    openOnboarding()
+                }
+            } message: {
+                Text("Which Onboarding view would you like to view?")
+            }
         }
         
         func openOnboarding() {
@@ -511,6 +1007,31 @@ struct DevNewOnboardingView: View {
                 .frame(width: 750, height: 425)
             
             newWindow.contentView = NSHostingView(rootView: onboardingView)
+            newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
+            newWindow.standardWindowButton(.zoomButton)?.isHidden = true
+            
+            //hide title and bar
+            newWindow.titleVisibility = .hidden
+            newWindow.makeKeyAndOrderFront(nil)
+            newWindow.orderFrontRegardless()
+        }
+        
+        func openProOnboarding() {
+            let newWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 750, height: 450),
+                styleMask: [.titled, .closable, .resizable, .miniaturizable],
+                backing: .buffered, defer: false)
+            let onboardIdentifier = NSUserInterfaceItemIdentifier("proonboarding")
+            
+            newWindow.center()
+            newWindow.title = "Pro Onboarding Screen"
+            newWindow.identifier = onboardIdentifier
+            newWindow.isReleasedWhenClosed = false
+            
+            let onboardingView = NewProOnboardingView()
+                .frame(width: 750, height: 425)
+            
+            newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager(provm: ProViewModel())))
             newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
             newWindow.standardWindowButton(.zoomButton)?.isHidden = true
             
@@ -600,9 +1121,10 @@ struct DevNewOnboardingView: View {
 enum PreferencesSection: String, CaseIterable, Identifiable {
     case general = "General"
     case timer = "Timer"
-    case layout = "Layout"
+//    case layout = "Layout"
     case keyboard = "Keyboard"
     case pro = "Pro"
+    case feed = "Help & Feedback"
     case dev = "Developer"
     
     var id: String { self.rawValue }
@@ -612,13 +1134,13 @@ enum PreferencesSection: String, CaseIterable, Identifiable {
         switch self {
         case .general:
             GeneralView()
-                .environmentObject(TimerManager())
+                .environmentObject(TimerManager(provm: ProViewModel()))
         case .timer:
             TimerView(fontSize: fontSize)
                 .environmentObject(TimerViewModel())
-        case .layout:
-            LayoutView()
-                .environmentObject(ProViewModel())
+//        case .layout:
+//            LayoutView()
+//                .environmentObject(ProViewModel())
         case .keyboard:
             if viewModel.proTrue {
                 ChooseView()
@@ -627,8 +1149,12 @@ enum PreferencesSection: String, CaseIterable, Identifiable {
             }
         case .pro:
             ProView()
+        case .feed:
+            HelpAndFeedbackView()
         case .dev:
             DeveloperPreferencesView()
+                .environmentObject(TimerManager(provm: ProViewModel()))
+                .environmentObject(ProViewModel())
         }
     }
 }
@@ -636,6 +1162,49 @@ enum PreferencesSection: String, CaseIterable, Identifiable {
 struct ListPreferencesView: View {
     @EnvironmentObject var viewModel: ProViewModel
     @State private var selectedSection: PreferencesSection = .general
+    @Binding var fontSize: CGFloat
+    
+    var body: some View {
+        VStack {
+            Spacer().frame(height: 20)
+            
+            NavigationView {
+                List(PreferencesSection.allCases, selection: $selectedSection) { section in
+                    NavigationLink(destination: section.view(fontSize: $fontSize, viewModel: viewModel)) {
+                        Text(section.rawValue)
+                            .padding(3)
+                    }
+                }
+                .listStyle(SidebarListStyle())
+                .frame(width: 150)
+                
+                selectedSection.view(fontSize: $fontSize, viewModel: viewModel)
+                    .frame(minWidth: 400)
+                    .padding()
+            }
+            .navigationTitle("Preferences")
+            .frame(width: 750, height: 450)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: toggleSidebar) {
+                        Image(systemName: "sidebar.left")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func toggleSidebar() {
+        NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
+    }
+}
+
+struct ListProPreferencesView: View {
+    @EnvironmentObject var viewModel: ProViewModel
+    @State private var selectedSection: PreferencesSection = .pro
     @Binding var fontSize: CGFloat
     
     var body: some View {

@@ -15,5 +15,13 @@
 			</array>
 		</dict>
 	</array>
+	<key>SUEnableDownloaderService</key>
+	<true/>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string> https://brainspark1.github.io/iTimer2/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>FWtmrR9x3spKjU8TJOXV7/7V6Ab9ILEL5E8Y9aoF54U=</string>
 </dict>
 </plist>

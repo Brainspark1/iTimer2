@@ -2,15 +2,16 @@ import SwiftUI
 import Combine
 import AppKit
 import KeyboardShortcuts
+import Foundation
 
 struct iTimer2App: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var timerManager = TimerManager()
+    @StateObject private var timerManager = TimerManager(provm: ProViewModel())
     @StateObject private var preferencesvm = PreferencesViewModel()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
     
     init() {
-            // This block runs when the app launches
+        // This block runs when the app launches
             if UserDefaults.standard.bool(forKey: "proModeTrueBool") {
                 preferencesvm.ifRestarted = true
                 // Reset the value so it only applies once after restart
@@ -68,7 +69,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
     @Published var contentView = ContentView()
-    @Published var timerManager = TimerManager()
+    @Published var timerManager = TimerManager(provm: ProViewModel())
     @Published var viewModel = TimerViewModel()
     @Published var isPomodoroRunning = false
     @Published var isStopwatchRunning = false
@@ -100,7 +101,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
         
         self.popover = NSPopover()
-        self.popover.contentSize = NSSize(width: 400, height: 400)
+        self.popover.contentSize = NSSize(width: 255, height: 300)
         self.popover.behavior = .transient
         self.popover.contentViewController = NSHostingController(rootView: ContentView()
             .environmentObject(timerManager)
