@@ -30,6 +30,7 @@ struct ChooseView: View {
                 .padding()
         }
         .buttonStyle(BorderlessButtonStyle())
+        .padding(.top, 40)
             
             if !preferencesvm.ifRestarted {
                 Text("Please restart iTimer2 to activate these shortcuts")
@@ -38,33 +39,67 @@ struct ChooseView: View {
                     .padding()
             }
             
-            Form {
-                KeyboardShortcuts.Recorder("Open iTimer2", name: .openApp)
-//              KeyboardShortcuts.Recorder("Toggle Only Timer Mode", name: .onlyTimer)
-            }
-            .padding()
+//            Form {
+//                KeyboardShortcuts.Recorder("Open iTimer2", name: .openApp)
+////              KeyboardShortcuts.Recorder("Toggle Only Timer Mode", name: .onlyTimer)
+//            }
+//            .padding()
         
-            HStack {
-                
-                Form {
-                    KeyboardShortcuts.Recorder("Start/Pause", name: .startTimer)
-                    KeyboardShortcuts.Recorder("Stop", name: .stopTimer)
-                    KeyboardShortcuts.Recorder("Open Pomodoro Mode", name: .openPom)
-                    KeyboardShortcuts.Recorder("Open Stopwatch", name: .openStopwatch)
-                    KeyboardShortcuts.Recorder("Exit Pomodoro Mode", name: .closePom)
+            ScrollView(.vertical) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Start/Pause")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .startTimer)
+                    }
+                    HStack {
+                        Text("Stop")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .stopTimer)
+                    }
+                    HStack {
+                        Text("Open Pomodoro Mode")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .openPom)
+                    }
+                    HStack {
+                        Text("Open Stopwatch")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .openStopwatch)
+                    }
+                    HStack {
+                        Text("Exit Pomodoro Mode")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .closePom)
+                    }
+                    HStack {
+                        Text("Close Stopwatch")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .closeStopwatch)
+                    }
+                    HStack {
+                        Text("Show History")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .history)
+                    }
+                    HStack {
+                        Text("Popout Timer")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .popoutTimer)
+                    }
+                    HStack {
+                        Text("Preferences")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .preferences)
+                    }
+                    HStack {
+                        Text("Quit")
+                        Spacer()
+                        KeyboardShortcuts.Recorder("", name: .quit)
+                    }
+                    .padding(.bottom, 10)
                 }
                 .padding()
-                
-                Form {
-                    KeyboardShortcuts.Recorder("Close Stopwatch", name: .closeStopwatch)
-                    KeyboardShortcuts.Recorder("Show History", name: .history)
-                    KeyboardShortcuts.Recorder("Popout Timer", name: .popoutTimer)
-                    KeyboardShortcuts.Recorder("Preferences", name: .preferences)
-                    KeyboardShortcuts.Recorder("Quit", name: .quit)
-                }
-                .padding()
-                
-                Spacer()
             }
         }
     }

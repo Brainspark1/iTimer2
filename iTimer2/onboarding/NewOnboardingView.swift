@@ -45,12 +45,14 @@ struct NewOnboard1View: View {
     var body: some View {
         Spacer()
         Spacer()
+        Spacer(minLength: 20)
         Text("Welcome to iTimer2")
             .font(.largeTitle)
         Text("Let's get you set up")
             .font(.system(size: 13))
             .opacity(0.5)
             .padding()
+        Spacer()
         Spacer()
         Button(action: {
             selectedTab += 1
@@ -518,7 +520,7 @@ struct NewOnboard8View: View {
         
         Spacer()
         
-        Text("£2.99")
+        Text("$2.99")
             .font(.title2)
             .opacity(0.5)
             .padding()

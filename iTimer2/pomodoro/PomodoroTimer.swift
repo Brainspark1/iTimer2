@@ -129,6 +129,8 @@ struct PomodoroView: View {
     }
 
     func openPomTimer() {
+        appDelegate.closePanelAnimated()
+        
         let newWindow = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
             styleMask: [.titled, .closable, .resizable, .miniaturizable],

@@ -14,6 +14,7 @@ struct ContentView: View {
     @EnvironmentObject var viewModel: TimerViewModel
     @EnvironmentObject var soundModel: SoundModel
     @EnvironmentObject private var layoutvm: LayoutViewModel
+    @EnvironmentObject var appDelegate: AppDelegate
     @State private var audioPlayer: AVAudioPlayer?
     @State private var cancellables = Set<AnyCancellable>()
     @State private var showPomodoro = false
@@ -37,16 +38,16 @@ struct ContentView: View {
 //            if !showPomodoro && !showStopwatch {
 //
 //                    if timerManager.hasCompletedOnboarding == true {
-//                                
+//
 //                                Button(action: {
 //                                    openOnboarding()
 //                                }) {
-//                                    
+//
 //                                    Text("Get the most from iTimer2")
 //                                }
 //                                .padding(.top, 35)
 //                            } else if provm.proTrue == false && timerManager.hasCompletedOnboarding == false {
-//                                
+//
 //                                Button(action: {
 //                                    openProPreferences()
 //                                }) {
@@ -62,9 +63,10 @@ struct ContentView: View {
                     } else if showStopwatch {
                         StopwatchView(showStopwatch: $showStopwatch)
                             .environmentObject(timerManager)
-                            .environmentObject(AppDelegate())
-                            .environmentObject(ProViewModel())
-                            .environmentObject(TimerViewModel())
+                            .environmentObject(provm)
+                            .environmentObject(viewModel)
+                            .environmentObject(soundModel)
+                            .environmentObject(layoutvm)
                     } else {
                         
                         if timerManager.hasCompletedOnboarding == true {
@@ -282,10 +284,13 @@ struct ContentView: View {
                     }
 
                 }
-//                .frame(width: 255, height: (timerManager.hasCompletedOnboarding == false || !provm.proTrue) ? 342 : 290)
+                .frame(width: 255, height: (timerManager.hasCompletedOnboarding == false || !provm.proTrue) ? 342 : 290)
                 .frame(width: 255, height: 300)
                 .padding([.leading, .trailing, .top], 36)
                 .padding(.bottom, 14)
+//                .frame(minWidth: 320, idealWidth: 360, maxWidth: 420)
+//                .frame(minHeight: 350, idealHeight: 400, maxHeight: 500)
+//                .padding(.all, 12)
                 .onAppear {
                     setupKeyboardShortcuts()
                 }
@@ -488,6 +493,8 @@ struct ContentView: View {
     }
     
     func openPopoutTimer() {
+        appDelegate.closePanelAnimated()
+        
         let newWindow = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
                 styleMask: [.titled, .closable, .resizable, .miniaturizable],
@@ -531,6 +538,9 @@ struct ContentView: View {
     }
 
     func openPreferences() {
+        // Close the panel before opening preferences
+        appDelegate.closePanelAnimated()
+
         // Create a new window
         let newWindow = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 750, height: 425),

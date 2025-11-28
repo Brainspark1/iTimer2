@@ -25,57 +25,77 @@ struct GeneralView: View {
         
         VStack {
             
+            Spacer()
+            
+            HStack {
+            
             Text("iTimer2")
                 .font(.system(size: 30))
                 .fontWeight(.bold)
                 .foregroundColor(.green)
                 .shadow(color: .mint, radius: 30)
+                
+                Spacer()
             
-            HStack {
-                
-                if provm.proTrue {
-                    Text("Version: \(getAppVersion())")
-                        .font(.title3)
-                        .padding([.leading, .top, .bottom])
-                } else {
-                    Text("Version: \(getAppVersion())")
-                        .font(.title3)
-                        .padding()
-                }
-                
-                if provm.proTrue {
-                    Text("(Pro)")
-                        .font(.title3)
-                        .padding(.trailing)
+                HStack {
+                    
+                    if provm.proTrue {
+                        Text("Version: \(getAppVersion())")
+                            .font(.title3)
+                            .padding([.leading, .top, .bottom])
+                    } else {
+                        Text("Version: \(getAppVersion())")
+                            .font(.title3)
+                            .padding()
+                    }
+                    
+                    if provm.proTrue {
+                        Text("(Pro)")
+                            .font(.title3)
+                            .padding(.trailing)
+                    }
+                    
                 }
                 
             }
-            
-            LaunchAtLogin.Toggle("Launch on start")
-                .toggleStyle(.switch)
-                .padding()
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(.gray, lineWidth: 0.5)
-                )
+            .padding([.leading, .trailing])
             
             HStack {
-                
-                Toggle("Notifications", isOn: $timerManager.notificationsEnabled)
+                Text("Launch on start")
+                    .padding(.leading)
+                Spacer()
+                LaunchAtLogin.Toggle("")
                     .toggleStyle(.switch)
                     .padding()
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(.gray, lineWidth: 0.5)
-                    )
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(.gray, lineWidth: 0.5)
+            )
+            .padding([.leading, .trailing])
+            
+            HStack {
+                Text("Notifications")
+                    .padding(.leading)
+                Spacer()
+                InfoButtonDown(content: "Your Mac will send you a notification when your timer has finished")
+                Toggle("", isOn: $timerManager.notificationsEnabled)
+                    .toggleStyle(.switch)
+                    .padding()
                     .onChange(of: timerManager.notificationsEnabled) {
                         if timerManager.notificationsEnabled {
                             notifyUserPermissions()
                         }
                     }
-                
-                InfoButtonRight(content: "Your Mac will send you a notification when your timer has finished")
+
             }
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(.gray, lineWidth: 0.5)
+            )
+            .padding([.leading, .trailing])
+            
+            Spacer()
         }
     }
     
@@ -101,87 +121,72 @@ struct GeneralView: View {
 
 struct KeyView: View {
     var body: some View {
-        
+
         VStack {
             
-            HStack {
-                Spacer()
-                Image(systemName: "arrow.right.circle")
-                Text("Start/Pause")
-                Text("⌘ + ⏎")
-                Spacer()
-                Image(systemName: "xmark.circle")
-                Text("Stop")
-                Text("⌘ + ⇧ + ⏎")
-                Spacer()
+            Spacer()
+
+            Form {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Start/Pause")
+                        Spacer()
+                        Text("⌘ + ⏎")
+                    }
+                    HStack {
+                        Text("Stop")
+                        Spacer()
+                        Text("⌘ + ⇧ + ⏎")
+                    }
+                    HStack {
+                        Text("Open Pomodoro Mode")
+                        Spacer()
+                        Text("⌘ + 1")
+                    }
+                    HStack {
+                        Text("Close Pomodoro Mode")
+                        Spacer()
+                        Text("⌘ + ⇧ + 1")
+                    }
+                    HStack {
+                        Text("Open Stopwatch")
+                        Spacer()
+                        Text("⌘ + 2")
+                    }
+                    HStack {
+                        Text("Close Stopwatch")
+                        Spacer()
+                        Text("⌘ + ⇧ + 2")
+                    }
+                    HStack {
+                        Text("Show History")
+                        Spacer()
+                        Text("⌘ + Y")
+                    }
+                    HStack {
+                        Text("Popout Timer")
+                        Spacer()
+                        Text("⌘ + =")
+                    }
+                    HStack {
+                        Text("Preferences")
+                        Spacer()
+                        Text("⌘ + ,")
+                    }
+                    HStack {
+                        Text("Quit")
+                        Spacer()
+                        Text("⌘ + Q")
+                    }
+                }
+                .padding()
             }
-            
-            HStack {
-                Spacer()
-                Image(systemName: "chevron.up")
-                    .foregroundColor(.red)
-                Text("Open Pomodoro Mode")
-                Text("⌘ + 1")
-                Spacer()
-                Image(systemName: "chevron.down")
-                    .foregroundColor(.red)
-                Text("Close Pomodoro Mode")
-                Text("⌘ + ⇧ + 1")
-                Spacer()
-            }
-            .padding()
-            
-            HStack {
-                Spacer()
-                Image(systemName: "stopwatch")
-                Text("Open Stopwatch")
-                Text("⌘ + 2")
-                Spacer()
-                Image(systemName: "xmark.circle")
-                Text("Close Stopwatch")
-                Text("⌘ + ⇧ + 2")
-                Spacer()
-            }
-            
-            HStack {
-                Spacer()
-                Image(systemName: "list.bullet.clipboard")
-                Text("Show History")
-                Text("⌘ + Y")
-                Spacer()
-                Image(systemName: "pip.exit")
-                Text("Popout Timer")
-                Text("⌘ + =")
-                Spacer()
-            }
-            .padding()
-            
-            HStack {
-                Spacer()
-                Image(systemName: "gear.badge")
-                Text("Preferences")
-                Text("⌘ + ,")
-                Spacer()
-                Image(systemName: "exclamationmark.octagon")
-                    .foregroundColor(.red)
-                Text("Quit")
-                Text("⌘ + Q")
-                Spacer()
-            }
-            
-            HStack {
-                Spacer()
-                Image(systemName: "arrow.up.bin")
-                Text("Toggle Only Timer Mode")
-                Text("⌘ + ⇧ + ⌥ + T")
-                Spacer()
-            }
-            .padding()
-            
+
             Text("Note: Click the Timer to open it out in a Popout view.")
                 .font(.subheadline)
                 .padding()
-            
+
+            Spacer()
         }
     }
 }
@@ -247,10 +252,13 @@ struct TimerView: View {
 
     var body: some View {
         VStack {
+            
+            Spacer()
+            
             // Font Size Slider
             Slider(value: $fontSize, in: 42...50, step: 2) {
                 Text("Timer Size")
-                    .padding(.trailing, 2)
+                    .padding(.trailing, 15)
             }
             .padding()
 
@@ -374,6 +382,8 @@ struct TimerView: View {
                 }
                 .buttonStyle(PlainButtonStyle())
                 .padding(.leading)
+                
+                Spacer()
             
                 }
         }
@@ -525,7 +535,7 @@ struct ProView: View {
         
         Text("Buy iTimer 2 Pro")
             .font(.title)
-        Text("£2.99")
+        Text("$2.99")
             .font(.title2)
             .opacity(0.5)
             .padding()
@@ -713,31 +723,37 @@ struct HelpAndFeedbackView: View {
     let addressToCopy = "brainsparkteam@gmail.com"
 
         var body: some View {
-            Text("We'd love to hear from you! Feel free to reach out with any questions or feedback.")
-                .opacity(0.8)
-            
-            HStack {
-                Text("Contact/Support Email: brainsparkteam@gmail.com")
+            VStack {
+                Spacer()
                 
-                Button(action: {
-                    copyToClipboard(addressToCopy)
-                    buttonText = "Copied!"
+                Text("We'd love to hear from you! Feel free to reach out with any questions or feedback.")
+                    .opacity(0.8)
+                
+                HStack {
+                    Text("Contact/Support Email: brainsparkteam@gmail.com")
                     
-                    // Reset the button text after 5 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                        buttonText = "Copy Address"
+                    Button(action: {
+                        copyToClipboard(addressToCopy)
+                        buttonText = "Copied!"
+                        
+                        // Reset the button text after 5 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            buttonText = "Copy Address"
+                        }
+                    }) {
+                        Text(buttonText)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
                     }
-                }) {
-                    Text(buttonText)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+                    .buttonStyle(PlainButtonStyle())
+                    .padding()
+                    
                 }
-                .buttonStyle(PlainButtonStyle())
-                .padding()
                 
+                Spacer()
             }
         }
 
@@ -789,36 +805,36 @@ struct DevNewOnboardingView: View {
         
         var body: some View {
             
-            HStack {
-                Button(action: {
-                    if let url = URL(string: "https://github.com/Brainspark1/iTimer2") {
-                        openURL(url)
-                    }
-                }) {
-                    Text("Github: github.com/Brainspark1/iTimer2")
-                }
-                .buttonStyle(.plain)
-                
-                Button(action: {
-                    if let url = URL(string: "https://github.com/Brainspark1/iTimer2") {
-                        openURL(url)
-                    }
-                }) {
-                    Text("Open Link")
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .padding()
-                .fixedSize()
-                .buttonStyle(PlainButtonStyle())
-                .frame(width: 112, height: 26)
-                
-                Spacer()
-            }
-            .padding([.top, .leading, .trailing], 23)
+//            HStack {
+////                Button(action: {
+////                    if let url = URL(string: "https://github.com/Brainspark1/iTimer2") {
+////                        openURL(url)
+////                    }
+////                }) {
+////                    Text("Github: github.com/Brainspark1/iTimer2")
+////                }
+////                .buttonStyle(.plain)
+////                
+////                Button(action: {
+////                    if let url = URL(string: "https://github.com/Brainspark1/iTimer2") {
+////                        openURL(url)
+////                    }
+////                }) {
+////                    Text("Open Link")
+////                        .padding(.horizontal, 12)
+////                        .padding(.vertical, 6)
+////                        .background(.blue)
+////                        .foregroundColor(.white)
+////                        .cornerRadius(8)
+////                }
+////                .padding()
+////                .fixedSize()
+////                .buttonStyle(PlainButtonStyle())
+////                .frame(width: 112, height: 26)
+////                
+////                Spacer()
+//            }
+//            .padding([.top, .leading, .trailing], 23)
             
             HStack {
                 Button(action: {
@@ -882,6 +898,7 @@ struct DevNewOnboardingView: View {
             }
             .padding([.top, .leading, .trailing], 23)
             
+            Spacer()
             Spacer()
             Spacer()
             Spacer()
@@ -978,9 +995,11 @@ struct DevNewOnboardingView: View {
                 }
                 .buttonStyle(PlainButtonStyle())
                 
+                Spacer()
+                
             }
             .padding(10)
-            .padding(.bottom, 10)
+//            .padding(.bottom, 10)
             .alert("Which Onboarding?", isPresented: $showOnboardingAlert) {
                 Button("Pro") {
                     openProOnboarding()
@@ -1145,7 +1164,7 @@ enum PreferencesSection: String, CaseIterable, Identifiable {
             if viewModel.proTrue {
                 ChooseView()
             } else {
-                KeyView() // Replace with your alternative view
+                KeyView()
             }
         case .pro:
             ProView()
@@ -1165,36 +1184,22 @@ struct ListPreferencesView: View {
     @Binding var fontSize: CGFloat
     
     var body: some View {
-        VStack {
-            Spacer().frame(height: 20)
-            
-            NavigationView {
-                List(PreferencesSection.allCases, selection: $selectedSection) { section in
-                    NavigationLink(destination: section.view(fontSize: $fontSize, viewModel: viewModel)) {
-                        Text(section.rawValue)
-                            .padding(3)
-                    }
+        NavigationSplitView {
+            List(PreferencesSection.allCases, selection: $selectedSection) { section in
+                NavigationLink(value: section) {
+                    Text(section.rawValue)
+                        .padding(3)
                 }
-                .listStyle(SidebarListStyle())
-                .frame(width: 150)
-                
-                selectedSection.view(fontSize: $fontSize, viewModel: viewModel)
-                    .frame(minWidth: 400)
-                    .padding()
             }
+            .listStyle(SidebarListStyle())
+            .frame(minWidth: 150, maxHeight: .infinity, alignment: .top)
             .navigationTitle("Preferences")
-            .frame(width: 750, height: 450)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: toggleSidebar) {
-                        Image(systemName: "sidebar.left")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 16, height: 16)
-                    }
-                }
-            }
+        } detail: {
+            selectedSection.view(fontSize: $fontSize, viewModel: viewModel)
+                .frame(minWidth: 400, maxHeight: .infinity, alignment: .top)
         }
+        .frame(width: 750)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
     }
     
     private func toggleSidebar() {

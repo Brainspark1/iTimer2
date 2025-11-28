@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-ns/sparkle">
+  <channel>
+    <title>My App Updates</title>
+    <link>https://yourname.github.io/MyApp/appcast.xml</link>
+    <description>App updates</description>
+
+    <item>
+      <title>Version 1.1</title>
+      <sparkle:version>1.1</sparkle:version>
+      <enclosure
+        url="https://brainspark1.github.io/itimer-2/iTimer2_26.0.1.dmg.zip"
+        sparkle:edSignature="PASTE_SIGNATURE_FROM_SIGN_UPDATE"
+        sparkle:length="1234567"
+        type="application/octet-stream"
+      />
+    </item>
+  </channel>
+</rss>
