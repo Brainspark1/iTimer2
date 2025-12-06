@@ -20,7 +20,7 @@ struct NewOnboardingView: View {
                 NewOnboard1View(selectedTab: $selectedTab)
             } else if selectedTab == 1 {
                 NewOnboard2View(selectedTab: $selectedTab)
-                    .environmentObject(TimerManager(provm: ProViewModel()))
+                    .environmentObject(TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel()))
             } else if selectedTab == 2 {
                 NewOnboard3View(selectedTab: $selectedTab)
             } else if selectedTab == 3 {

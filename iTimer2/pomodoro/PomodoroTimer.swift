@@ -13,6 +13,7 @@ struct PomodoroView: View {
     @AppStorage("workDuration") private var workDuration: String = "25" // Stored in minutes
     @AppStorage("breakDuration") private var breakDuration: String = "5"  // Stored in minutes
     @State private var cycleStage = 0
+    @State private var sessionStartTime: Date = Date()
 //    @AppStorage("numberOfWork") var numberOfWork = 0
 //    @AppStorage("numberOfBreak") var numberOfBreak = 0
     
@@ -94,7 +95,14 @@ struct PomodoroView: View {
                 Spacer()
                 
                 Button(action: {
+                    // Record analytics before resetting
+                    if timerViewModel.isTimerRunning {
+                        let duration = Double((timerViewModel.isOnBreak ? getBreakDuration() : getWorkDuration()) * 60 - timerViewModel.timeRemaining)
+                        let type = timerViewModel.isOnBreak ? "pomodoro_break" : "pomodoro_work"
+                        timerManager.analyticsvm.addEntry(type: type, duration: duration, timestamp: sessionStartTime)
+                    }
                     timerViewModel.resetTimer(workDuration: getWorkDuration())
+                    sessionStartTime = Date()
                 }) {
                     Text("Reset")
                         .padding(.horizontal, 12)
@@ -119,6 +127,12 @@ struct PomodoroView: View {
             self.appDelegate.isPomodoroRunning = true
             self.appDelegate.timerManager.remainingTime = timerViewModel.timeRemaining
             self.appDelegate.timerManager.isBreakTime = timerViewModel.isOnBreak
+            sessionStartTime = Date()
+            timerViewModel.onModeSwitch = { [self] previousMode, duration in
+                let type = previousMode ? "pomodoro_break" : "pomodoro_work"
+                timerManager.analyticsvm.addEntry(type: type, duration: duration, timestamp: sessionStartTime)
+                sessionStartTime = Date() // Reset for next mode
+            }
         }
     }
 

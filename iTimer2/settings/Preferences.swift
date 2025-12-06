@@ -192,13 +192,13 @@ struct KeyView: View {
 }
 
 //struct LayoutView: View {
-//    
+//
 //    @EnvironmentObject private var layoutvm: LayoutViewModel
 //    @EnvironmentObject private var provm: ProViewModel
 //    @State private var showPopover = false
-//    
+//
 //    var body: some View {
-//        
+//
 //        HStack(spacing: 20) {
 //            Button(action: {
 //                showPopover.toggle()
@@ -211,21 +211,21 @@ struct KeyView: View {
 //                    .padding()
 //            }
 //            .buttonStyle(BorderlessButtonStyle())
-//            
+//
 //            Toggle("Show Pomodoro", isOn: $layoutvm.showPomButton)
 //            Toggle("Show Stopwatch", isOn: $layoutvm.showStopwatchButton)
 //            Toggle("Show History", isOn: $layoutvm.showHistoryButton)
 //        }
 //        .padding(40)
-//        
+//
 //        if provm.proTrue {
 //            Toggle("Only Timer", isOn: $layoutvm.onlyTimerMode)
 //                .toggleStyle(.switch)
 //                .conditionalKeyboardShortcut(isEnabled: !provm.proTrue, KeyboardShortcut("t", modifiers: [.command, .shift, .option]))
 //        }
-//        
+//
 //        Spacer()
-//        
+//
 //    }
 //}
 
@@ -491,7 +491,7 @@ struct ProView: View {
 //            Text("Dismiss Upgrade Button")
 //        }
 //        .buttonStyle(.plain)
-//        
+//
 //        Spacer()
         
         Form {
@@ -610,7 +610,7 @@ struct ProView: View {
         let onboardingView = NewProOnboardingView()
             .frame(width: 750, height: 425)
         
-        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager(provm: ProViewModel())))
+        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel())))
         newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
         newWindow.standardWindowButton(.zoomButton)?.isHidden = true
         
@@ -636,7 +636,7 @@ struct ProPasswordFieldView: View {
 //                        provm.proTrue = true
 //                        print("Password Correct")
 //                        openProOnboarding()
-//                        
+//
 //                        UserDefaults.standard.set(true, forKey: "proModeTrueBool")
 //                }
 //            }
@@ -706,7 +706,7 @@ struct ProPasswordFieldView: View {
         let onboardingView = NewProOnboardingView()
             .frame(width: 750, height: 425)
         
-        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager(provm: ProViewModel())))
+        newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel())))
         newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
         newWindow.standardWindowButton(.zoomButton)?.isHidden = true
         
@@ -714,6 +714,102 @@ struct ProPasswordFieldView: View {
         newWindow.titleVisibility = .hidden
         newWindow.makeKeyAndOrderFront(nil)
         newWindow.orderFrontRegardless()
+    }
+}
+
+struct AnalyticsView: View {
+    @EnvironmentObject var analyticsvm: AnalyticsViewModel
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack {
+                    Text("Enable Analytics")
+                    Spacer()
+                    Toggle(isOn: $analyticsvm.enabledAnalytics) {
+                        Text("")
+                    }
+                    .toggleStyle(.switch)
+                }
+                .padding()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(.gray, lineWidth: 0.5)
+                )
+
+                if analyticsvm.enabledAnalytics {
+                    VStack(alignment: .leading, spacing: 15) {
+//                        Text("Analytics Overview")
+//                            .font(.title2)
+//                            .fontWeight(.bold)
+
+                        HStack {
+                            Text("Total Pomodoro Sessions:")
+                            Spacer()
+                            Text("\(analyticsvm.totalPomodoroSessions)")
+                                .fontWeight(.semibold)
+                        }
+
+                        HStack {
+                            Text("Total Work Minutes:")
+                            Spacer()
+                            Text(String(format: "%.2f", analyticsvm.totalWorkMinutes))
+                                .fontWeight(.semibold)
+                        }
+
+                        HStack {
+                            Text("Total Break Minutes:")
+                            Spacer()
+                            Text(String(format: "%.2f", analyticsvm.totalBreakMinutes))
+                                .fontWeight(.semibold)
+                        }
+
+                        Text("Weekly Breakdown")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .padding(.top, 10)
+
+                        ForEach(analyticsvm.weeklyBreakdown().sorted(by: { $0.key > $1.key }), id: \.key) { week, data in
+                            VStack(alignment: .leading) {
+                                Text("Week: \(week)")
+                                    .font(.headline)
+                                HStack {
+                                    Text("Timer:")
+                                    Spacer()
+                                    Text(String(format: "%.2f", data["timer"]!))
+                                }
+                                HStack {
+                                    Text("Pomodoro:")
+                                    Spacer()
+                                    Text(String(format: "%.2f", data["pomodoro"]!))
+                                }
+                                HStack {
+                                    Text("Stopwatch:")
+                                    Spacer()
+                                    Text(String(format: "%.2f", data["stopwatch"]!))
+                                }
+                            }
+                            .padding(.vertical, 5)
+                        }
+
+                        Button(action: {
+                            analyticsvm.exportLogs()
+                        }) {
+                            Text("Export Logs")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.top, 10)
+                    }
+                    .padding()
+                }
+            }
+            .padding()
+        }
     }
 }
 
@@ -773,7 +869,7 @@ struct DevNewOnboardingView: View {
                 NewOnboard1View(selectedTab: $selectedTab)
             } else if selectedTab == 1 {
                 NewOnboard2View(selectedTab: $selectedTab)
-                    .environmentObject(TimerManager(provm: ProViewModel()))
+                    .environmentObject(TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel()))
             } else if selectedTab == 2 {
                 NewOnboard3View(selectedTab: $selectedTab)
             } else if selectedTab == 3 {
@@ -788,7 +884,7 @@ struct DevNewOnboardingView: View {
                 NewOnboard8View(selectedTab: $selectedTab)
             } else if selectedTab == 8 {
                 NewOnboard10View(selectedTab: $selectedTab)
-                    .environmentObject(TimerManager(provm: ProViewModel()))
+                    .environmentObject(TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel()))
             }
         }
     }
@@ -814,7 +910,7 @@ struct DevNewOnboardingView: View {
 ////                    Text("Github: github.com/Brainspark1/iTimer2")
 ////                }
 ////                .buttonStyle(.plain)
-////                
+////
 ////                Button(action: {
 ////                    if let url = URL(string: "https://github.com/Brainspark1/iTimer2") {
 ////                        openURL(url)
@@ -831,7 +927,7 @@ struct DevNewOnboardingView: View {
 ////                .fixedSize()
 ////                .buttonStyle(PlainButtonStyle())
 ////                .frame(width: 112, height: 26)
-////                
+////
 ////                Spacer()
 //            }
 //            .padding([.top, .leading, .trailing], 23)
@@ -918,7 +1014,7 @@ struct DevNewOnboardingView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                .padding()
+                .padding(.trailing)
                 .buttonStyle(PlainButtonStyle())
                 
                 VStack {
@@ -938,7 +1034,7 @@ struct DevNewOnboardingView: View {
 //                        .fixedSize()
 //                        .padding()
 //                    }
-//                    
+//
                     Button(action: {
                         if !provm.proTrue {
                             openOnboarding()
@@ -1050,7 +1146,7 @@ struct DevNewOnboardingView: View {
             let onboardingView = NewProOnboardingView()
                 .frame(width: 750, height: 425)
             
-            newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager(provm: ProViewModel())))
+            newWindow.contentView = NSHostingView(rootView: onboardingView.environmentObject(TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel())))
             newWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
             newWindow.standardWindowButton(.zoomButton)?.isHidden = true
             
@@ -1069,11 +1165,11 @@ struct DevNewOnboardingView: View {
     }
 
 //struct PreferencesView: View {
-//        
+//
 //        @Binding var fontSize: CGFloat
 //        @Binding var notificationsEnabled
 //        @EnvironmentObject var provm: ProViewModel
-//        
+//
 //        var keyboardView: AnyView {
 //            if provm.proTrue {
 //                return AnyView(ChooseView().environmentObject(PreferencesViewModel()))
@@ -1081,9 +1177,9 @@ struct DevNewOnboardingView: View {
 //                return AnyView(KeyView())
 //            }
 //        }
-//        
+//
 //        var body: some View {
-//            
+//
 //            CustomTabView(
 //                content: [
 //                    (
@@ -1133,46 +1229,65 @@ struct DevNewOnboardingView: View {
 //                    )
 //                ]
 //            )
-//            
+//
 //        }
 //    }
 
 enum PreferencesSection: String, CaseIterable, Identifiable {
     case general = "General"
     case timer = "Timer"
-//    case layout = "Layout"
     case keyboard = "Keyboard"
     case pro = "Pro"
+    case analytics = "Analytics"
     case feed = "Help & Feedback"
     case dev = "Developer"
     
     var id: String { self.rawValue }
+    
+    // Icons for each section
+    var icon: String {
+        switch self {
+        case .general: return "gearshape"
+        case .timer: return "timer"
+        case .keyboard: return "keyboard"
+        case .pro: return "star.circle"
+        case .analytics: return "chart.bar"
+        case .feed: return "questionmark.circle"
+        case .dev: return "hammer"
+        }
+    }
     
     @ViewBuilder
     func view(fontSize: Binding<CGFloat>, viewModel: ProViewModel) -> some View {
         switch self {
         case .general:
             GeneralView()
-                .environmentObject(TimerManager(provm: ProViewModel()))
+                .environmentObject(TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel()))
+            
         case .timer:
             TimerView(fontSize: fontSize)
                 .environmentObject(TimerViewModel())
-//        case .layout:
-//            LayoutView()
-//                .environmentObject(ProViewModel())
+            
         case .keyboard:
             if viewModel.proTrue {
                 ChooseView()
             } else {
                 KeyView()
             }
+            
         case .pro:
             ProView()
+            
+        case .analytics:
+            AnalyticsView()
+                .environmentObject(AnalyticsViewModel())
+            
         case .feed:
             HelpAndFeedbackView()
+            
         case .dev:
             DeveloperPreferencesView()
-                .environmentObject(TimerManager(provm: ProViewModel()))
+                .environmentObject(TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel()))
                 .environmentObject(ProViewModel())
         }
     }
@@ -1187,13 +1302,15 @@ struct ListPreferencesView: View {
         NavigationSplitView {
             List(PreferencesSection.allCases, selection: $selectedSection) { section in
                 NavigationLink(value: section) {
-                    Text(section.rawValue)
-                        .padding(3)
+                    Label(section.rawValue, systemImage: section.icon)
+                        .imageScale(.medium)
+                        .padding(.trailing, 3)
                 }
             }
             .listStyle(SidebarListStyle())
-            .frame(minWidth: 150, maxHeight: .infinity, alignment: .top)
+            .frame(minWidth: 180, maxHeight: .infinity, alignment: .top)
             .navigationTitle("Preferences")
+            
         } detail: {
             selectedSection.view(fontSize: $fontSize, viewModel: viewModel)
                 .frame(minWidth: 400, maxHeight: .infinity, alignment: .top)
@@ -1219,7 +1336,8 @@ struct ListProPreferencesView: View {
             NavigationView {
                 List(PreferencesSection.allCases, selection: $selectedSection) { section in
                     NavigationLink(destination: section.view(fontSize: $fontSize, viewModel: viewModel)) {
-                        Text(section.rawValue)
+                        Label(section.rawValue, systemImage: section.icon)
+                            .imageScale(.medium)
                             .padding(3)
                     }
                 }

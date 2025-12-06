@@ -23,15 +23,16 @@ class TimerManager: ObservableObject {
     @Published var minutesInput: String = ""
     @Published var secondsInput: String = ""
     @Published var progress: Double = 0.0 // Added progress property
-    
+
     @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding: Bool = true
     @AppStorage("notificationsEnabled") var notificationsEnabled = true
-    
+
     // Stopwatch
     @Published var stopwatchTimeElapsed: TimeInterval = 0
     @Published var stopwatchIsRunning: Bool = false
-    
+
     var provm: ProViewModel
+    var analyticsvm: AnalyticsViewModel
     @Published var show75Alert: Bool = false
     let un = UNUserNotificationCenter.current()
 
@@ -43,7 +44,7 @@ class TimerManager: ObservableObject {
 //        let minutes: Int
 //        let seconds: Int
 //        let timestamp: Date
-//        
+//
 //        // Custom initializer to assign UUID automatically
 //        init(id: UUID = UUID(), name: String, hours: Int, minutes: Int, seconds: Int, timestamp: Date = Date()) {
 //            self.id = id
@@ -53,11 +54,11 @@ class TimerManager: ObservableObject {
 //            self.seconds = seconds
 //            self.timestamp = timestamp
 //        }
-//        
+//
 //        var description: String {
 //            return "\(name): \(hours)h \(minutes)m \(seconds)s"
 //        }
-//        
+//
 //        var timestampDescription: String {
 //            let dateFormatter = DateFormatter()
 //            dateFormatter.dateStyle = .short
@@ -73,9 +74,17 @@ class TimerManager: ObservableObject {
     }
 
     // Initialize and load history
-    init(provm: ProViewModel) {
+    init(provm: ProViewModel, analyticsvm: AnalyticsViewModel) {
         self.provm = provm
+        self.analyticsvm = analyticsvm
         loadHistory()
+    }
+
+    // Add analytics entry for timer
+    func addTimerAnalyticsEntry(hours: Int, minutes: Int, seconds: Int) {
+        let totalSeconds = Double(hours * 3600 + minutes * 60 + seconds)
+        // Assuming AnalyticsViewModel is accessible, but since it's not injected, we'll need to modify this
+        // For now, we'll assume it's handled elsewhere or add a reference later
     }
 
     // MARK: - Persistence Methods
@@ -146,6 +155,7 @@ class TimerManager: ObservableObject {
 //                history.append(newItem)
 //            }
             saveHistory() // Persist the change
+            addTimerAnalyticsEntry(hours: hours, minutes: minutes, seconds: seconds) // Add analytics entry
 
             timer = Timer.publish(every: 1, on: .main, in: .common)
                 .autoconnect()

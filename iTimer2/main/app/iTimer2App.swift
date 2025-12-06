@@ -9,15 +9,19 @@ import Foundation
 // -------------------------------------------------------------
 struct iTimer2App: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var timerManager = TimerManager(provm: ProViewModel())
+    @StateObject private var timerManager = TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel())
     @StateObject private var preferencesvm = PreferencesViewModel()
     @StateObject private var provm = ProViewModel()
     @StateObject private var soundModel = SoundModel()
     @StateObject private var layoutvm = LayoutViewModel()
     @StateObject private var viewModel = TimerViewModel()
+    @StateObject private var analyticsvm = AnalyticsViewModel()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
 
     init() {
+        let provm = ProViewModel()
+        let analyticsvm = AnalyticsViewModel()
+        _timerManager = StateObject(wrappedValue: TimerManager(provm: provm, analyticsvm: analyticsvm))
         if UserDefaults.standard.bool(forKey: "proModeTrueBool") {
             preferencesvm.ifRestarted = true
         }
@@ -34,6 +38,9 @@ struct iTimer2App: App {
                     .environmentObject(soundModel)
                     .environmentObject(layoutvm)
                     .environmentObject(viewModel)
+                    .onAppear {
+                        timerManager.analyticsvm = analyticsvm
+                    }
             } else {
                 OnboardingView()
                     .environmentObject(appDelegate)
@@ -43,6 +50,10 @@ struct iTimer2App: App {
                     .environmentObject(soundModel)
                     .environmentObject(layoutvm)
                     .environmentObject(viewModel)
+                    .environmentObject(analyticsvm)
+                    .onAppear {
+                        timerManager.analyticsvm = analyticsvm
+                    }
             }
         }
         .commands {
@@ -188,8 +199,8 @@ final class PopoverPanel: NSPanel {
     // Modified to accept completion so we can start click monitor AFTER animation
     func animateIn(completion: (() -> Void)? = nil) {
         NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.18
-            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            ctx.duration = 0.25
+            ctx.timingFunction = CAMediaTimingFunction(controlPoints: 0.25, 0.46, 0.45, 0.94)
             self.animator().alphaValue = 1.0
         } completionHandler: {
             completion?()
@@ -198,8 +209,8 @@ final class PopoverPanel: NSPanel {
 
     func animateOut(_ completion: @escaping () -> Void) {
         NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.12
-            ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            ctx.duration = 0.2
+            ctx.timingFunction = CAMediaTimingFunction(controlPoints: 0.55, 0.055, 0.675, 0.19)
             self.animator().alphaValue = 0.0
         } completionHandler: {
             completion()
@@ -221,7 +232,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var isOpening = false
 
     @Published var contentView = ContentView()
-    @Published var timerManager = TimerManager(provm: ProViewModel())
+    @Published var timerManager = TimerManager(provm: ProViewModel(), analyticsvm: AnalyticsViewModel())
     @Published var viewModel = TimerViewModel()
     @Published var isPomodoroRunning = false
     @Published var isStopwatchRunning = false
@@ -259,6 +270,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 )
             }
             .store(in: &cancellables)
+
+
 
         NotificationCenter.default.addObserver(
             self,

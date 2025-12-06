@@ -8,12 +8,14 @@ class TimerViewModel: ObservableObject {
     @Published var timeRemaining: Int = 1500 // Default to 25 minutes in seconds
     @Published var isOnBreak: Bool = false
     @Published var isTimerRunning: Bool = false
-    
+
     let un = UNUserNotificationCenter.current()
 
     private var timer: Timer? = nil
     var workDuration: Int = 25 // Default work duration
     var breakDuration: Int = 5  // Default break duration
+
+    var onModeSwitch: ((Bool, TimeInterval) -> Void)? // Callback for mode switch with previous mode and duration
     
     func setWorkDuration(_ duration: Int) {
             self.workDuration = duration
@@ -72,8 +74,11 @@ class TimerViewModel: ObservableObject {
     }
 
     func switchMode() {
+        let previousMode = isOnBreak
+        let duration = Double(getWorkDuration() * 60 - timeRemaining) // Calculate actual time spent in previous mode
         isOnBreak.toggle()
         timeRemaining = isOnBreak ? getBreakDuration() * 60 : getWorkDuration() * 60
+        onModeSwitch?(previousMode, duration)
     }
 
     func getWorkDuration() -> Int {

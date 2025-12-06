@@ -106,6 +106,11 @@ struct StopwatchView: View {
         timerManager.stopwatchIsRunning = false
         self.timer?.invalidate()
         self.timer = nil
+        // Add analytics entry for stopwatch session
+        if timerManager.stopwatchTimeElapsed > 0 {
+            // Assuming analyticsvm is accessible via timerManager
+            timerManager.analyticsvm.addEntry(type: "stopwatch", duration: timerManager.stopwatchTimeElapsed)
+        }
         timerManager.stopwatchTimeElapsed = 0
     }
 
